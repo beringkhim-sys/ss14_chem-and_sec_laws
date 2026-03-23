@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SS14 Tools — Goob Station</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0d0f;--bg2:#141417;--bg3:#1a1a1e;--bg4:#20242b;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#e8e8ec;--text2:#9090a0;--text3:#5a5a6a;
+  --red:#c0392b;--red-l:#e74c3c;--red-d:rgba(192,57,43,0.15);
+  --green:#1e8449;--green-l:#27ae60;--green-d:rgba(30,132,73,0.15);
+  --blue:#2471a3;--blue-l:#3498db;--blue-d:rgba(36,113,163,0.15);
+  --amber:#d4820a;--amber-l:#f39c12;--amber-d:rgba(212,130,10,0.15);
+  --purple:#7d3c98;--purple-l:#9b59b6;--purple-d:rgba(125,60,152,0.15);
+  --mono:'Share Tech Mono',monospace;--head:'Barlow Condensed',sans-serif;--body:'Barlow',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;display:flex;flex-direction:column}
+
+/* ── HEADER ── */
+.header{background:var(--bg2);border-bottom:1px solid var(--border2);padding:14px 24px;display:flex;align-items:center;gap:14px;flex-shrink:0}
+.hlogo{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;font-family:var(--head)}
+.htitle{font-family:var(--head);font-size:20px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.hsub{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:1px}
+.hnav{margin-left:auto;display:flex;gap:6px}
+.hnav-btn{font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:5px;border:1px solid var(--border2);background:none;color:var(--text3);cursor:pointer;letter-spacing:.05em;transition:all .15s}
+.hnav-btn:hover{color:var(--text2);background:rgba(255,255,255,.04)}
+.hnav-btn.active{color:#fff;border-color:transparent}
+
+/* ── PAGES ── */
+.page{display:none;flex:1;overflow:hidden}
+.page.active{display:flex;flex-direction:column}
+
+/* ════════════════════════════════
+   SENTENCE CALCULATOR
+════════════════════════════════ */
+.sc-body{display:grid;grid-template-columns:1fr 310px;flex:1;overflow:hidden}
+.sc-left{padding:18px 22px;overflow-y:auto}
+.sc-right{padding:16px;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;gap:12px;overflow-y:auto}
+
+/* server tabs inside sc */
+.srv-tabs{display:flex;gap:6px;margin-bottom:16px}
+.srv-tab{font-family:var(--mono);font-size:11px;padding:5px 13px;border-radius:4px;border:1px solid var(--border2);background:none;color:var(--text3);cursor:pointer;letter-spacing:.05em;transition:all .15s}
+.srv-tab:hover{color:var(--text2)}
+.srv-tab.active{border-color:rgba(192,57,43,.45);color:var(--red-l);background:var(--red-d)}
+
+.tier-block{margin-bottom:16px}
+.tier-hdr{display:flex;align-items:center;justify-content:space-between;padding:7px 13px;border-radius:6px 6px 0 0;border:1px solid;border-bottom:none;font-family:var(--head);font-size:14px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.th-max{font-family:var(--mono);font-size:11px;opacity:.65}
+.crime-btns{border:1px solid;border-radius:0 0 6px 6px;overflow:hidden}
+.cbtn{display:flex;align-items:center;width:100%;background:var(--bg3);border:none;border-bottom:1px solid var(--border);cursor:pointer;padding:0;transition:background .1s}
+.cbtn:last-child{border-bottom:none}
+.cbtn:hover:not(.on):not(.lk){background:rgba(255,255,255,.04)}
+.cbtn.on{background:rgba(192,57,43,.12)}
+.cbtn.lk{opacity:.36;cursor:not-allowed}
+.cchk{width:36px;min-width:36px;align-self:stretch;min-height:38px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text3);border-right:1px solid var(--border);background:var(--bg2);transition:all .1s}
+.cbtn.on .cchk{background:var(--red);color:#fff}
+.ccode{font-family:var(--mono);font-size:11px;color:var(--text3);padding:9px 9px;min-width:72px}
+.cname{font-size:13px;color:var(--text);flex:1;padding:9px 4px;text-align:left;line-height:1.3}
+.ctime{font-family:var(--mono);font-size:12px;color:var(--text2);padding:9px 12px;white-space:nowrap}
+.ctag{font-size:10px;font-family:var(--mono);padding:2px 5px;border-radius:3px;margin-left:5px;font-weight:600;vertical-align:middle}
+.tlink{background:rgba(150,100,220,.15);color:#c5a3ff;border:1px solid rgba(150,100,220,.3)}
+.twarn{background:var(--amber-d);color:var(--amber-l);border:1px solid rgba(212,130,10,.3)}
+.tcap{background:var(--red-d);color:var(--red-l);border:1px solid rgba(192,57,43,.35)}
+.twip{background:rgba(100,100,150,.15);color:#9090c0;border:1px solid rgba(100,100,180,.3)}
+.t1 .tier-hdr{background:rgba(39,174,96,.1);border-color:rgba(39,174,96,.3);color:#2ecc71}.t1 .crime-btns{border-color:rgba(39,174,96,.2)}
+.t2 .tier-hdr{background:rgba(243,156,18,.1);border-color:rgba(243,156,18,.3);color:#f39c12}.t2 .crime-btns{border-color:rgba(243,156,18,.2)}
+.t3 .tier-hdr{background:rgba(230,126,34,.1);border-color:rgba(230,126,34,.3);color:#e67e22}.t3 .crime-btns{border-color:rgba(230,126,34,.2)}
+.t4 .tier-hdr{background:rgba(231,76,60,.1);border-color:rgba(231,76,60,.3);color:#e74c3c}.t4 .crime-btns{border-color:rgba(231,76,60,.2)}
+.t5 .tier-hdr{background:rgba(192,57,43,.22);border-color:rgba(192,57,43,.45);color:#ff6b6b}.t5 .crime-btns{border-color:rgba(192,57,43,.3)}
+
+.verdict{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:18px;text-align:center}
+.v-label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
+.v-srv{font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:8px}
+.v-time{font-family:var(--head);font-size:60px;font-weight:800;line-height:1;color:var(--text);transition:color .2s}
+.v-time.cap{color:var(--red-l);font-size:32px}
+.v-time.capped{color:var(--amber-l)}
+.v-time.perma{color:var(--red-l)}
+.v-unit{font-family:var(--mono);font-size:11px;color:var(--text3);margin-top:4px}
+.v-note{font-size:11px;color:var(--text3);margin-top:10px;padding-top:10px;border-top:1px solid var(--border);line-height:1.6}
+.chbox{background:var(--bg3);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.chbox-t{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:8px 12px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.ch-empty{padding:12px;font-size:12px;color:var(--text3);font-family:var(--mono);text-align:center}
+.ch-row{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;border-bottom:1px solid var(--border);font-size:12px;gap:8px}
+.ch-row:last-child{border-bottom:none}
+.ch-row.dr{opacity:.38}
+.ch-n{color:var(--text2);flex:1}
+.ch-v{font-family:var(--mono);font-size:12px;color:var(--text);white-space:nowrap}
+.ch-tot{display:flex;justify-content:space-between;padding:7px 12px;background:rgba(0,0,0,.2);font-family:var(--mono);font-size:12px;border-top:1px solid var(--border)}
+.ch-tot .tl{color:var(--text3)}.ch-tot .tv{color:var(--amber-l)}
+.wbox{background:var(--amber-d);border:1px solid rgba(212,130,10,.25);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--amber-l);line-height:1.5}
+.wbox.info{background:var(--red-d);border-color:rgba(192,57,43,.25);color:var(--red-l)}
+.clrbtn{width:100%;background:none;border:1px solid var(--border2);border-radius:6px;padding:8px;font-family:var(--mono);font-size:12px;color:var(--text3);cursor:pointer;letter-spacing:.06em;transition:all .12s;text-transform:uppercase;margin-top:auto}
+.clrbtn:hover{border-color:var(--red-l);color:var(--red-l);background:var(--red-d)}
+
+/* ════════════════════════════════
+   CHEMISTRY CALCULATOR
+════════════════════════════════ */
+.chem-wrap{display:grid;grid-template-columns:320px 1fr;flex:1;overflow:hidden}
+.chem-left{background:var(--bg2);border-right:1px solid var(--border2);display:flex;flex-direction:column;overflow:hidden}
+.chem-right{display:flex;flex-direction:column;overflow:hidden}
+
+.chem-search-wrap{padding:14px 16px;border-bottom:1px solid var(--border)}
+.chem-search{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px 12px;font-size:13px;font-family:var(--body);color:var(--text);outline:none;transition:border-color .15s}
+.chem-search:focus{border-color:rgba(39,174,96,.4)}
+.chem-search::placeholder{color:var(--text3)}
+
+.chem-filter{display:flex;gap:4px;padding:8px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.cf-btn{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid var(--border2);background:none;color:var(--text3);cursor:pointer;letter-spacing:.04em;transition:all .12s}
+.cf-btn:hover{color:var(--text2)}
+.cf-btn.active{color:#fff;border-color:transparent}
+.cf-all.active{background:#444}
+.cf-med.active{background:var(--green)}
+.cf-tox.active{background:var(--red)}
+.cf-narc.active{background:var(--purple)}
+.cf-pyro.active{background:var(--amber)}
+.cf-misc.active{background:var(--blue)}
+
+.chem-list{flex:1;overflow-y:auto}
+.chem-item{padding:9px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;display:flex;align-items:center;gap:10px}
+.chem-item:hover{background:rgba(255,255,255,.04)}
+.chem-item.selected{background:var(--green-d);border-left:3px solid var(--green-l)}
+.ci-name{font-size:13px;color:var(--text);flex:1}
+.ci-cat{font-size:10px;font-family:var(--mono);padding:2px 6px;border-radius:3px;font-weight:600}
+.cat-med{background:var(--green-d);color:var(--green-l);border:1px solid rgba(39,174,96,.3)}
+.cat-tox{background:var(--red-d);color:var(--red-l);border:1px solid rgba(192,57,43,.3)}
+.cat-narc{background:var(--purple-d);color:var(--purple-l);border:1px solid rgba(125,60,152,.3)}
+.cat-pyro{background:var(--amber-d);color:var(--amber-l);border:1px solid rgba(212,130,10,.3)}
+.cat-misc{background:var(--blue-d);color:var(--blue-l);border:1px solid rgba(36,113,163,.3)}
+.ci-empty{padding:20px 16px;text-align:center;font-family:var(--mono);font-size:12px;color:var(--text3)}
+
+/* Detail panel */
+.chem-detail{flex:1;overflow-y:auto;padding:20px 24px}
+.cd-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);font-family:var(--mono);font-size:13px;gap:8px}
+.cd-name{font-family:var(--head);font-size:28px;font-weight:800;letter-spacing:.03em;margin-bottom:4px}
+.cd-meta{font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:18px;display:flex;gap:12px;flex-wrap:wrap}
+.cd-meta span{display:flex;align-items:center;gap:4px}
+
+.cd-section{margin-bottom:18px}
+.cd-section-title{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+
+/* Recipe tree */
+.recipe-tree{display:flex;flex-direction:column;gap:6px}
+.rt-row{display:flex;align-items:center;gap:10px;padding:7px 12px;border-radius:6px;background:var(--bg3);border:1px solid var(--border)}
+.rt-row.intermediate{border-left:3px solid var(--amber-l)}
+.rt-arrow{color:var(--text3);font-size:12px;font-family:var(--mono)}
+.rt-name{font-size:13px;color:var(--text);flex:1}
+.rt-amt{font-family:var(--mono);font-size:12px;color:var(--text2)}
+.rt-note{font-size:11px;color:var(--amber-l);font-family:var(--mono)}
+
+/* Base elements */
+.base-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.base-item{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:3px}
+.base-item.dispenser{border-color:rgba(39,174,96,.3)}
+.base-item.not-dispenser{border-color:rgba(192,57,43,.3)}
+.bi-name{font-size:13px;font-weight:600;color:var(--text)}
+.bi-amt{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--green-l)}
+.bi-src{font-size:10px;font-family:var(--mono);color:var(--text3)}
+.base-item.not-dispenser .bi-src{color:var(--red-l)}
+
+/* Effects */
+.effects-list{display:flex;flex-direction:column;gap:4px}
+.eff-row{font-size:13px;padding:4px 0}
+.eff-heal{color:var(--green-l)}
+.eff-dmg{color:var(--red-l)}
+.eff-misc{color:var(--text2)}
+.od-box{background:var(--red-d);border:1px solid rgba(192,57,43,.3);border-radius:6px;padding:8px 12px;font-size:12px;font-family:var(--mono);color:var(--red-l);margin-top:6px}
+.heat-box{background:var(--amber-d);border:1px solid rgba(212,130,10,.3);border-radius:6px;padding:8px 12px;font-size:12px;font-family:var(--mono);color:var(--amber-l);margin-top:6px}
+
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+@media(max-width:700px){
+  .sc-body{grid-template-columns:1fr}
+  .sc-right{border-left:none;border-top:1px solid var(--border)}
+  .chem-wrap{grid-template-columns:1fr}
+  .chem-left{max-height:40vh}
+  .hnav-btn span{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="hlogo" style="background:linear-gradient(135deg,#c0392b,#8e44ad)">G</div>
+  <div>
+    <div class="htitle">Goob Station Tools</div>
+    <div class="hsub">SS14 // Security &amp; Chemistry</div>
+  </div>
+  <div class="hnav">
+    <button class="hnav-btn active" id="nav-sc" onclick="showPage('sc')" style="--ac:var(--red-l)" >⚖ <span>Sentences</span></button>
+    <button class="hnav-btn" id="nav-chem" onclick="showPage('chem')">⚗ <span>Chemistry</span></button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PAGE: SENTENCE CALCULATOR
+══════════════════════════════════ -->
+<div class="page active" id="page-sc">
+  <div class="sc-body">
+    <div class="sc-left">
+      <div class="srv-tabs" id="srv-tabs"></div>
+      <div id="sc-panels"></div>
+    </div>
+    <div class="sc-right">
+      <div class="verdict">
+        <div class="v-label">Final Sentence</div>
+        <div class="v-srv" id="v-srv"></div>
+        <div class="v-time" id="v-time">—</div>
+        <div class="v-unit" id="v-unit">no charges selected</div>
+        <div class="v-note" id="v-note" style="display:none"></div>
+      </div>
+      <div class="chbox">
+        <div class="chbox-t">Active charges (<span id="ch-count">0</span>)</div>
+        <div id="ch-list"><div class="ch-empty">// none selected</div></div>
+      </div>
+      <div id="sc-warns" style="display:flex;flex-direction:column;gap:8px"></div>
+      <button class="clrbtn" onclick="scClearAll()">⟳ Clear All</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PAGE: CHEMISTRY CALCULATOR
+══════════════════════════════════ -->
+<div class="page" id="page-chem">
+  <div class="chem-wrap">
+    <div class="chem-left">
+      <div class="chem-search-wrap">
+        <input class="chem-search" id="chem-search" type="text" placeholder="Search substances..." oninput="renderChemList()">
+      </div>
+      <div class="chem-filter">
+        <button class="cf-btn cf-all active" onclick="setChemFilter('all',this)">All</button>
+        <button class="cf-btn cf-med" onclick="setChemFilter('med',this)">Med</button>
+        <button class="cf-btn cf-tox" onclick="setChemFilter('tox',this)">Toxin</button>
+        <button class="cf-btn cf-narc" onclick="setChemFilter('narc',this)">Narc</button>
+        <button class="cf-btn cf-pyro" onclick="setChemFilter('pyro',this)">Pyro</button>
+        <button class="cf-btn cf-misc" onclick="setChemFilter('misc',this)">Misc</button>
+      </div>
+      <div class="chem-list" id="chem-list"></div>
+    </div>
+    <div class="chem-right">
+      <div class="chem-detail" id="chem-detail">
+        <div class="cd-empty">
+          <div style="font-size:28px">⚗</div>
+          <div>Select a substance to see its recipe breakdown</div>
+          <div style="font-size:11px;color:var(--text3)">Shows base elements needed from the dispenser</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  PAGE NAVIGATION
+// ══════════════════════════════════════════
+const PAGE_COLORS = { sc: '#e74c3c', chem: '#27ae60' };
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.hnav-btn').forEach(b => { b.classList.remove('active'); b.style.background=''; b.style.color=''; b.style.borderColor=''; });
+  document.getElementById('page-' + id).classList.add('active');
+  const btn = document.getElementById('nav-' + id);
+  btn.classList.add('active');
+  const c = PAGE_COLORS[id];
+  btn.style.background = c + '22';
+  btn.style.color = c;
+  btn.style.borderColor = c + '88';
+}
+
+// ══════════════════════════════════════════
+//  SENTENCE CALCULATOR DATA
+// ══════════════════════════════════════════
+const SC_SERVERS = {
+  goob:{name:"Goob Station",color:"#e74c3c",capNote:"Requires Captain approval. Exception: V-III — no Captain needed.",maxBrig:10,
+    tiers:[{n:1,c:"t1",l:"I Degree — Minor",m:"Warning / up to 3 min"},{n:2,c:"t2",l:"II Degree",m:"Up to 5 min"},{n:3,c:"t3",l:"III Degree",m:"Up to 10 min"},{n:4,c:"t4",l:"IV Degree",m:"Up to 10 min / Perma"},{n:5,c:"t5",l:"V Degree — Capital",m:"Execution"}],
+    crimes:[
+      {code:"I-I",name:"Disturbance",tier:1,mins:2,linked:null,capital:false},
+      {code:"I-II",name:"Petty Theft",tier:1,mins:3,linked:null,capital:false},
+      {code:"I-III",name:"Possession / Use of Illegal Substances",tier:1,mins:3,linked:null,capital:false},
+      {code:"I-IV",name:"Trespass",tier:1,mins:2,linked:null,capital:false},
+      {code:"I-V",name:"Vandalism",tier:1,mins:2,linked:null,capital:false},
+      {code:"II-I",name:"Animal Cruelty",tier:2,mins:3,linked:null,capital:false},
+      {code:"II-II",name:"Damage / Destruction of Property",tier:2,mins:4,linked:null,capital:false},
+      {code:"II-III",name:"Endangerment",tier:2,mins:4,linked:null,capital:false},
+      {code:"II-IV",name:"Failure to Comply",tier:2,mins:2,linked:null,capital:false},
+      {code:"II-V",name:"Possession of Restricted Gear",tier:2,mins:5,linked:null,capital:false},
+      {code:"II-VI",name:"Rioting",tier:2,mins:4,linked:null,capital:false},
+      {code:"III-I",name:"Assault / Battery",tier:3,mins:6,linked:"assault",capital:false},
+      {code:"III-II",name:"Breach of Arrest",tier:3,mins:4,linked:null,capital:false},
+      {code:"III-III",name:"Grand Theft",tier:3,mins:6,linked:null,capital:false},
+      {code:"III-IV",name:"Manslaughter",tier:3,mins:8,linked:"assault",capital:false},
+      {code:"III-V",name:"Mass Destruction",tier:3,mins:10,linked:null,capital:false},
+      {code:"III-VI",name:"Possession of Restricted Weaponry",tier:3,mins:6,linked:null,capital:false},
+      {code:"III-VII",name:"Secure Trespass",tier:3,mins:6,linked:null,capital:false},
+      {code:"III-VIII",name:"Breach of Custody",tier:3,mins:5,linked:null,capital:false},
+      {code:"IV-I",name:"Attempted Murder",tier:4,mins:10,linked:"murder",capital:false,lenient:true},
+      {code:"IV-II",name:"Unlawful Control / Kidnapping",tier:4,mins:10,linked:null,capital:false},
+      {code:"IV-III",name:"Murder",tier:4,mins:10,linked:"murder",capital:false,perma:true},
+      {code:"V-I",name:"Mass Murder",tier:5,mins:0,linked:null,capital:true},
+      {code:"V-II",name:"Prevention of Revival",tier:5,mins:0,linked:null,capital:true},
+      {code:"V-III",name:"Refusal of Mental Shielding",tier:5,mins:0,linked:null,capital:true,noCapt:true},
+      {code:"V-IV",name:"Terrorism",tier:5,mins:0,linked:null,capital:true},
+    ]},
+  deltav:{name:"Delta-V",color:"#3498db",capNote:"Capital: Execution > Exfiltration > Extended Confinement. Execution is last resort.",maxBrig:999,
+    tiers:[{n:1,c:"t1",l:"1XX — Misdemeanors",m:"2–4 min"},{n:2,c:"t2",l:"2XX — Felonies",m:"3–6 min"},{n:3,c:"t3",l:"3XX — Grand Felonies",m:"8–20 min"},{n:4,c:"t5",l:"4XX — Capital",m:"Ext. Conf. / Execution"}],
+    crimes:[
+      {code:"101",name:"Animal Cruelty",tier:1,mins:2,linked:null,capital:false},
+      {code:"102",name:"Harassment",tier:1,mins:3,linked:null,capital:false,wip:true},
+      {code:"103",name:"Vigilantism",tier:1,mins:4,linked:null,capital:false,wip:true},
+      {code:"104",name:"Petty Larceny",tier:1,mins:2,linked:null,capital:false},
+      {code:"105",name:"Trespass",tier:1,mins:2,linked:null,capital:false},
+      {code:"106",name:"Vandalism",tier:1,mins:2,linked:null,capital:false},
+      {code:"107",name:"Hooliganism",tier:1,mins:0,linked:null,capital:false,asNeeded:true},
+      {code:"201",name:"Assault",tier:2,mins:5,linked:null,capital:false},
+      {code:"202",name:"Breaking and Entering",tier:2,mins:5,linked:null,capital:false},
+      {code:"203",name:"Rioting",tier:2,mins:4,linked:null,capital:false},
+      {code:"204",name:"Endangerment",tier:2,mins:6,linked:null,capital:false},
+      {code:"205",name:"Possession",tier:2,mins:3,linked:null,capital:false,rangeMax:8},
+      {code:"206",name:"Obstruction of Justice",tier:2,mins:4,linked:null,capital:false},
+      {code:"207",name:"Perjury / False Report",tier:2,mins:4,linked:null,capital:false},
+      {code:"208",name:"Contempt of Court",tier:2,mins:4,linked:null,capital:false},
+      {code:"209",name:"Identity Theft",tier:2,mins:5,linked:null,capital:false,wip:true},
+      {code:"301",name:"Manslaughter",tier:3,mins:10,linked:null,capital:false},
+      {code:"302",name:"Kidnapping",tier:3,mins:10,linked:null,capital:false},
+      {code:"303",name:"Grand Possession",tier:3,mins:12,linked:null,capital:false,rangeMax:20,wip:true},
+      {code:"304",name:"Noöspheric Tampering",tier:3,mins:8,linked:null,capital:false},
+      {code:"305",name:"Sabotage",tier:3,mins:8,linked:null,capital:false},
+      {code:"306",name:"Abuse of Power",tier:3,mins:10,linked:null,capital:false},
+      {code:"307",name:"Grand Larceny",tier:3,mins:8,linked:null,capital:false},
+      {code:"308",name:"Black Marketeering",tier:3,mins:8,linked:null,capital:false},
+      {code:"401",name:"Murder",tier:4,mins:0,linked:null,capital:true},
+      {code:"402",name:"Terrorism",tier:4,mins:0,linked:null,capital:true},
+      {code:"403",name:"Grand Sabotage",tier:4,mins:0,linked:null,capital:true},
+      {code:"404",name:"Prevention of Revival",tier:4,mins:0,linked:null,capital:true},
+      {code:"405",name:"Sedition",tier:4,mins:0,linked:null,capital:true},
+      {code:"406",name:"Breach of Custody",tier:4,mins:0,linked:null,capital:true,wip:true},
+    ]}
+};
+
+let scServer = 'goob', scSel = new Set();
+function scId(c){return 's'+c.replace(/[^a-zA-Z0-9]/g,'_')}
+
+function buildSrvTabs(){
+  document.getElementById('srv-tabs').innerHTML = Object.entries(SC_SERVERS).map(([k,v])=>
+    `<button class="srv-tab${k===scServer?' active':''}" onclick="scSwitch('${k}')">${v.name}</button>`
+  ).join('');
+}
+
+function scSwitch(k){scServer=k;scSel.clear();buildSrvTabs();buildScPanels();scRender()}
+
+function buildScPanels(){
+  const s=SC_SERVERS[scServer];
+  document.getElementById('sc-panels').innerHTML=s.tiers.map(t=>{
+    const crimes=s.crimes.filter(c=>c.tier===t.n);
+    return `<div class="tier-block ${t.c}">
+      <div class="tier-hdr"><span>${t.l}</span><span class="th-max">${t.m}</span></div>
+      <div class="crime-btns">${crimes.map(c=>{
+        const ts=c.capital?"CAPITAL":c.asNeeded?"as needed":c.rangeMax?`${c.mins}–${c.rangeMax} min`:`${c.mins} min`;
+        const tags=[c.linked?`<span class="ctag tlink">LINKED</span>`:'',c.lenient?`<span class="ctag twarn">LENIENT</span>`:'',c.noCapt?`<span class="ctag twarn">NO CAPT.</span>`:'',c.capital?`<span class="ctag tcap">CAPITAL</span>`:'',c.wip?`<span class="ctag twip">WIP</span>`:''].join('');
+        return `<button class="cbtn" id="btn-${scId(c.code)}" onclick="scToggle('${c.code}')">
+          <span class="cchk" id="chk-${scId(c.code)}">○</span>
+          <span class="ccode">${c.code}</span>
+          <span class="cname">${c.name}${tags}</span>
+          <span class="ctime">${ts}</span>
+        </button>`;
+      }).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+function scToggle(code){if(scSel.has(code))scSel.delete(code);else scSel.add(code);scRender()}
+function scClearAll(){scSel.clear();scRender()}
+
+function scRender(){
+  const s=SC_SERVERS[scServer];
+  const charges=s.crimes.filter(c=>scSel.has(c.code));
+  const dropped=new Set();
+  const lg={};
+  charges.filter(c=>c.linked).forEach(c=>{if(!lg[c.linked])lg[c.linked]=[];lg[c.linked].push(c)});
+  Object.values(lg).forEach(g=>{if(g.length>1)[...g].sort((a,b)=>b.mins-a.mins).slice(1).forEach(c=>dropped.add(c.code))});
+  const hasCap=charges.some(c=>c.capital);
+  const active=charges.filter(c=>!c.capital&&!dropped.has(c.code)&&!c.asNeeded);
+  const raw=active.reduce((sum,c)=>sum+c.mins,0);
+  const capped=s.maxBrig<999&&raw>s.maxBrig;
+  const final=hasCap?0:capped?s.maxBrig:raw;
+  const hasPerma=charges.some(c=>c.perma&&!dropped.has(c.code));
+  const hasAN=charges.some(c=>c.asNeeded&&!dropped.has(c.code));
+
+  s.crimes.forEach(c=>{
+    const btn=document.getElementById('btn-'+scId(c.code));
+    const chk=document.getElementById('chk-'+scId(c.code));
+    if(!btn)return;
+    const on=scSel.has(c.code),lk=dropped.has(c.code);
+    btn.className='cbtn'+(on&&!lk?' on':'')+(lk?' lk':'');
+    chk.textContent=on?(lk?'✕':'●'):'○';
+  });
+
+  document.getElementById('ch-count').textContent=charges.length;
+  document.getElementById('v-srv').textContent=s.name;
+  const chlist=document.getElementById('ch-list');
+  if(!charges.length){chlist.innerHTML='<div class="ch-empty">// none selected</div>';}
+  else{
+    const rows=charges.map(c=>{const dr=dropped.has(c.code);const tv=c.capital?'CAP':c.asNeeded?'var.':c.rangeMax?`${c.mins}–${c.rangeMax}m`:`${c.mins}m`;return`<div class="ch-row${dr?' dr':''}"><span class="ch-n">${c.code} — ${c.name}${dr?` <em style="color:var(--text3)">(overridden)</em>`:''}</span><span class="ch-v">${tv}</span></div>`;}).join('');
+    const tot=(!hasCap&&active.length>1)?`<div class="ch-tot"><span class="tl">Raw total</span><span class="tv">${raw} min${capped?` → cap ${s.maxBrig}`:''}</span></div>`:'';
+    chlist.innerHTML=rows+tot;
+  }
+
+  const vt=document.getElementById('v-time'),vu=document.getElementById('v-unit'),vn=document.getElementById('v-note');
+  if(!charges.length){vt.textContent='—';vt.className='v-time';vu.textContent='no charges selected';vn.style.display='none';}
+  else if(hasCap){vt.textContent='CAPITAL';vt.className='v-time cap';vu.textContent=scServer==='deltav'?'ext. confinement / execution':'execution';vn.textContent=s.capNote;vn.style.display='block';}
+  else if(hasPerma){vt.textContent=final;vt.className='v-time perma';vu.textContent='min or PERMA — Warden\'s discretion';vn.textContent='Murder present. Warden may opt for permanent confinement.';vn.style.display='block';}
+  else if(hasAN&&active.length===0){vt.textContent='VAR.';vt.className='v-time';vu.textContent='at officer\'s discretion';vn.style.display='none';}
+  else{vt.textContent=final;vt.className='v-time'+(capped?' capped':'');vu.textContent='minute'+(final!==1?'s':'')+(capped?` (${s.maxBrig} min cap)`:'');vn.style.display='none';}
+
+  const warns=[];
+  Object.entries(lg).forEach(([g,arr])=>{if(arr.length>1){const k=[...arr].sort((a,b)=>b.mins-a.mins)[0];warns.push({t:'warn',m:`Linked crimes (${g}) — only "${k.name}" counted.`});}});
+  if(capped&&!hasCap)warns.push({t:'warn',m:`Raw total ${raw} min — capped to ${s.maxBrig} min.`});
+  if(hasCap)warns.push({t:'info',m:scServer==='deltav'?'Capital: Extended Confinement → Exfiltration → Execution (last resort).':'Capital offense. Execution requires Captain (except V-III).'});
+  const wb=document.getElementById('sc-warns');
+  wb.innerHTML=warns.map(w=>`<div class="wbox${w.t==='info'?' info':''}">${w.m}</div>`).join('');
+  wb.style.display=warns.length?'flex':'none';
+}
+
+// ══════════════════════════════════════════
+//  CHEMISTRY DATA
+// ══════════════════════════════════════════
+// Dispenser elements (available in chem dispenser)
+const DISPENSER = new Set(['oxygen','carbon','hydrogen','nitrogen','sulfur','phosphorus','potassium','silicon','chlorine','sodium','lithium','iron','copper','radium','sugar','ethanol','welding fuel','ammonia','plasma']);
+// Elements from other sources
+const SOURCES = {
+  'plasma': 'dispenser', 'ice': 'bartender soda dispenser', 'mercury': 'not in dispenser — check ChemVend',
+  'iodine': 'not in dispenser — check ChemVend', 'aluminum': 'not in dispenser — check ChemVend',
+  'gold': 'grind gold bar', 'silver': 'grind silver ingot/ore', 'uranium': 'grind uranium/uranium glass',
+  'zinc': 'any power cell', 'aloe': 'grind aloe plant', 'blood': 'from patients/yourself',
+  'ash': 'burn items in crematorium / burn paper', 'galaxythistle': 'botany — Galaxy Thistle',
+  'fiber': 'botany', 'poppy': 'botany — Poppy flower', 'banana peel': 'kitchen / botany',
+  'spaceman\'s trumpet': 'botany', 'carpotoxin': 'grind carp fillet / koi beans',
+  'cannabis leaves': 'botany', 'fat': 'cooking'
+};
+
+// Substance database with full recipe trees
+const CHEMS = [
+  // ── INTERMEDIATE / BASE ──
+  {id:'inaprovaline',name:'Inaprovaline',cat:'med',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'oxygen',amt:1},{ing:'sugar',amt:1},{ing:'carbon',amt:1}],
+   effects:[{t:'heal',s:'Stabilizes breathing in crit — heals 10 Asphyx when critical'},{t:'misc',s:'Reduces bleeding'}]},
+  {id:'kelotane',name:'Kelotane',cat:'med',od:'30u (thirst)',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'silicon',amt:1},{ing:'carbon',amt:1}],
+   effects:[{t:'heal',s:'0.5 Heat, Shock, Cold per unit'}]},
+  {id:'dylovene',name:'Dylovene',cat:'med',od:'20u',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'silicon',amt:1},{ing:'nitrogen',amt:1},{ing:'potassium',amt:1}],
+   effects:[{t:'heal',s:'1.5 Poison per unit'}]},
+  {id:'dexalin',name:'Dexalin',cat:'med',od:'20u',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'plasma',amt:0.1,catalyst:true},{ing:'oxygen',amt:2}],
+   effects:[{t:'heal',s:'1 Asphyx + 0.5 Bloodloss per unit'}]},
+  {id:'hydroxide',name:'Hydroxide',cat:'misc',od:'none',abs:null,heat:'>310K',
+   recipe:[{ing:'oxygen',amt:1},{ing:'hydrogen',amt:1}],
+   effects:[]},
+  {id:'fersilicite',name:'Fersilicite',cat:'misc',od:'none',abs:null,heat:'>310K',
+   recipe:[{ing:'iron',amt:1},{ing:'silicon',amt:1}],
+   effects:[]},
+  {id:'benzene',name:'Benzene',cat:'misc',od:'none',abs:'0.5u/s',heat:'>310K',
+   recipe:[{ing:'hydrogen',amt:1},{ing:'carbon',amt:1}],
+   effects:[{t:'dmg',s:'1 Cell per unit'}]},
+  {id:'acetone',name:'Acetone',cat:'misc',od:'none',abs:null,heat:null,
+   recipe:[{ing:'welding fuel',amt:2},{ing:'hydrogen',amt:0.5},{ing:'carbon',amt:0.5},{ing:'oxygen',amt:1.5}],
+   effects:[]},
+  {id:'phenol',name:'Phenol',cat:'misc',od:'none',abs:'0.5u/s',heat:'>310K',
+   recipe:[{ing:'hydroxide',amt:1,inter:true},{ing:'benzene',amt:1,inter:true}],
+   effects:[{t:'dmg',s:'1 Caustic + 2 Poison per unit'}]},
+  {id:'diethylamine',name:'Diethylamine',cat:'misc',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'ammonia',amt:1},{ing:'ethanol',amt:2}],
+   effects:[{t:'dmg',s:'1 Caustic per unit'}]},
+  {id:'oil',name:'Oil',cat:'misc',od:'none',abs:null,heat:null,
+   recipe:[{ing:'welding fuel',amt:1},{ing:'hydrogen',amt:1},{ing:'carbon',amt:1}],
+   effects:[]},
+  {id:'sulfuric acid',name:'Sulfuric Acid',cat:'tox',od:'none',abs:'3u/s',heat:null,
+   recipe:[{ing:'oxygen',amt:2},{ing:'hydrogen',amt:1},{ing:'sulfur',amt:1}],
+   effects:[{t:'dmg',s:'5 Caustic per unit on skin contact'}]},
+  {id:'table salt',name:'Table Salt',cat:'misc',od:'none',abs:null,heat:'>370K',
+   recipe:[{ing:'chlorine',amt:1},{ing:'sodium',amt:1}],
+   effects:[]},
+  {id:'ammonia',name:'Ammonia',cat:'misc',od:'none',abs:null,heat:null,
+   recipe:[{ing:'hydrogen',amt:3},{ing:'nitrogen',amt:1}],
+   effects:[]},
+  {id:'sodium carbonate',name:'Sodium Carbonate',cat:'misc',od:'none',abs:null,heat:null,
+   recipe:[{ing:'ammonia',amt:1,inter:true},{ing:'table salt',amt:1,inter:true},{ing:'carbon',amt:1},{ing:'oxygen',amt:1}],
+   effects:[]},
+  {id:'sodium hydroxide',name:'Sodium Hydroxide',cat:'misc',od:'none',abs:null,heat:null,
+   recipe:[{ing:'hydroxide',amt:1,inter:true},{ing:'sodium',amt:1}],
+   effects:[]},
+  {id:'unstable mutagen',name:'Unstable Mutagen',cat:'misc',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'radium',amt:1},{ing:'phosphorus',amt:1},{ing:'chlorine',amt:1}],
+   effects:[{t:'dmg',s:'3 Radiation per unit'}]},
+  {id:'hyronalin',name:'Hyronalin',cat:'med',od:'30u',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'radium',amt:1},{ing:'dylovene',amt:1,inter:true}],
+   effects:[{t:'heal',s:'1 Radiation per unit'},{t:'misc',s:'2% vomiting chance'}]},
+  {id:'leporazine',name:'Leporazine',cat:'med',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'plasma',amt:0.1,catalyst:true},{ing:'copper',amt:1},{ing:'fersilicite',amt:1,inter:true}],
+   effects:[{t:'heal',s:'4 Cold per unit'},{t:'misc',s:'Stabilizes body temperature'}]},
+  {id:'tranexamic acid',name:'Tranexamic Acid',cat:'med',od:'15u',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'inaprovaline',amt:1,inter:true},{ing:'sulfuric acid',amt:1,inter:true},{ing:'sugar',amt:1}],
+   effects:[{t:'misc',s:'Reduces bleeding significantly'}]},
+  {id:'saline',name:'Saline',cat:'med',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'water',amt:4},{ing:'table salt',amt:1,inter:true}],
+   effects:[{t:'heal',s:'Restores blood level; sates thirst'}]},
+  {id:'potassium iodide',name:'Potassium Iodide',cat:'med',od:'20u',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'potassium',amt:1},{ing:'iodine',amt:1}],
+   effects:[{t:'heal',s:'0.25 Radiation per unit; grants radiation protection'}]},
+  {id:'cryostylane',name:'Cryostylane',cat:'misc',od:'none',abs:null,heat:null,
+   recipe:[{ing:'ice',amt:1},{ing:'plasma',amt:1},{ing:'nitrogen',amt:1}],
+   effects:[{t:'misc',s:'Cools solution — uses oxygen or iodine'}]},
+
+  // ── MEDICINE ──
+  {id:'bicaridine',name:'Bicaridine',cat:'med',od:'15u',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'inaprovaline',amt:1,inter:true},{ing:'carbon',amt:1}],
+   effects:[{t:'heal',s:'2.5 Brute (all subtypes) per unit'},{t:'misc',s:'Drunk effect above OD threshold'}]},
+  {id:'bruizine',name:'Bruizine',cat:'med',od:'10.5u',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'bicaridine',amt:1,inter:true},{ing:'sugar',amt:1},{ing:'lithium',amt:0.9}],
+   effects:[{t:'heal',s:'4 Blunt per unit'}]},
+  {id:'lacerinol',name:'Lacerinol',cat:'med',od:'12u',abs:'0.5u/s',heat:'>335K',
+   recipe:[{ing:'bicaridine',amt:1,inter:true},{ing:'benzene',amt:1,inter:true}],
+   effects:[{t:'heal',s:'4 Slash per unit'}]},
+  {id:'puncturase',name:'Puncturase',cat:'med',od:'11u',abs:'0.5u/s',heat:'>325K',
+   recipe:[{ing:'bicaridine',amt:1,inter:true},{ing:'hydroxide',amt:1,inter:true}],
+   effects:[{t:'heal',s:'4 Piercing per unit'},{t:'dmg',s:'0.1 Blunt per unit'}]},
+  {id:'dermaline',name:'Dermaline',cat:'med',od:'10u',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'kelotane',amt:1,inter:true},{ing:'oxygen',amt:1},{ing:'phosphorus',amt:1}],
+   effects:[{t:'heal',s:'2 Heat, Shock, Cold per unit'}]},
+  {id:'pyrazine',name:'Pyrazine',cat:'med',od:'15u',abs:'0.1u/s',heat:'>540K',
+   recipe:[{ing:'leporazine',amt:1,inter:true},{ing:'dermaline',amt:1,inter:true},{ing:'carbon',amt:1}],
+   effects:[{t:'heal',s:'1 Heat per second (10/unit); −4 pain per 7s'}]},
+  {id:'insuzine',name:'Insuzine',cat:'med',od:'12u',abs:'0.5u/s',heat:'>433K',
+   recipe:[{ing:'leporazine',amt:1,inter:true},{ing:'kelotane',amt:1,inter:true},{ing:'silicon',amt:1}],
+   effects:[{t:'heal',s:'4 Shock per unit; removes licoxide/tazinide'}]},
+  {id:'sigynate',name:'Sigynate',cat:'med',od:'16u',abs:'0.5u/s',heat:'>370K',
+   recipe:[{ing:'sodium carbonate',amt:1,inter:true},{ing:'sodium hydroxide',amt:1,inter:true},{ing:'kelotane',amt:1,inter:true},{ing:'water',amt:1},{ing:'sugar',amt:1}],
+   effects:[{t:'heal',s:'3 Caustic per unit'}]},
+  {id:'dexalin+',name:'Dexalin Plus',cat:'med',od:'25u',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'dexalin',amt:1,inter:true},{ing:'carbon',amt:1},{ing:'iron',amt:1}],
+   effects:[{t:'heal',s:'3.5 Asphyx + 3 Bloodloss per unit'},{t:'misc',s:'Removes heartbreaker toxin'}]},
+  {id:'arithrazine',name:'Arithrazine',cat:'med',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'hyronalin',amt:1,inter:true},{ing:'hydrogen',amt:1}],
+   effects:[{t:'heal',s:'3 Radiation per unit'},{t:'dmg',s:'0.5 Brute per unit'}]},
+  {id:'phalanximine',name:'Phalanximine',cat:'med',od:'11u',abs:'0.1u/s',heat:null,
+   recipe:[{ing:'hyronalin',amt:1,inter:true},{ing:'ethanol',amt:1},{ing:'unstable mutagen',amt:1,inter:true}],
+   effects:[{t:'heal',s:'0.3 Cell per unit'},{t:'dmg',s:'0.15 Radiation + 0.15 Caustic per unit'}]},
+  {id:'tricordrazine',name:'Tricordrazine',cat:'med',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'inaprovaline',amt:1,inter:true},{ing:'dylovene',amt:1,inter:true}],
+   effects:[{t:'heal',s:'1 Brute + 0.5 Poison + 0.5 Heat/Shock/Cold per unit (body <100 dmg)'}]},
+  {id:'epinephrine',name:'Epinephrine',cat:'med',od:'20u',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'phenol',amt:1,inter:true},{ing:'acetone',amt:1,inter:true},{ing:'chlorine',amt:1},{ing:'hydroxide',amt:1,inter:true}],
+   effects:[{t:'heal',s:'3 Asphyx + 0.5 Poison + 1 Brute/Burn when in crit (<20u)'},{t:'misc',s:'110% speed; adrenaline; reduces stun/knockdown'}]},
+  {id:'atropine',name:'Atropine',cat:'med',od:'35u',abs:'0.25u/s',heat:null,
+   recipe:[{ing:'acetone',amt:1,inter:true},{ing:'diethylamine',amt:1,inter:true},{ing:'phenol',amt:1,inter:true},{ing:'ethanol',amt:1}],
+   effects:[{t:'heal',s:'All damage types when in crit (<35u); restores blood; reduces bleeding'},{t:'misc',s:'Stuttering, drunk, jittering side effects'}]},
+  {id:'artiplates',name:'Artiplates',cat:'med',od:'11u',abs:'0.5u/s',heat:'>310K',
+   recipe:[{ing:'saline',amt:3,inter:true},{ing:'tranexamic acid',amt:2,inter:true},{ing:'iron',amt:1},{ing:'copper',amt:1}],
+   effects:[{t:'heal',s:'5 Bloodloss per unit; reduces bleeding; restores blood level'}]},
+  {id:'tirimol',name:'Tirimol',cat:'med',od:'15u (stamina dmg)',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'acetone',amt:2,inter:true},{ing:'sodium polyacrylate',amt:1,inter:true},{ing:'sulfuric acid',amt:1,inter:true}],
+   effects:[{t:'heal',s:'6 Asphyx + reduces bleeding'},{t:'dmg',s:'75% speed; −3 stamina; 15u+ paralyze chance'}]},
+  {id:'cryoxadone',name:'Cryoxadone',cat:'med',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'dexalin',amt:1,inter:true},{ing:'water',amt:1},{ing:'oxygen',amt:1}],
+   effects:[{t:'heal',s:'<213K: 3 Brute + 4.5 Burn + 6 Asphyx + reduces bleeding + blood +8'},{t:'misc',s:'Add in order: plasma → O2 → water → O2 to avoid making Dexalin'}]},
+  {id:'salicylic acid',name:'Salicylic Acid',cat:'med',od:'25u',abs:'0.5u/s',heat:'>370K',
+   recipe:[{ing:'tranexamic acid',amt:1,inter:true},{ing:'fluorosulfuric acid',amt:1,inter:true},{ing:'sodium hydroxide',amt:1,inter:true},{ing:'bicaridine',amt:1,inter:true}],
+   effects:[{t:'heal',s:'12 Brute per unit (body >25 Brute damage)'},{t:'heal',s:'3 Brute per unit (body <25 Brute)'}]},
+  {id:'oxandrolone',name:'Oxandrolone',cat:'med',od:'25u',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'sodium carbonate',amt:1,inter:true},{ing:'dermaline',amt:1,inter:true},{ing:'phenol',amt:1,inter:true},{ing:'leporazine',amt:1,inter:true}],
+   effects:[{t:'heal',s:'4 Heat+Shock+Cold + 3 Caustic per unit (body >25 Burn)'},{t:'heal',s:'4 Burn per unit (body <25 Burn)'}]},
+  {id:'diphenhydramine',name:'Diphenhydramine',cat:'med',od:'none',abs:'0.5u/s',heat:'>377.59K',
+   recipe:[{ing:'diethylamine',amt:1,inter:true},{ing:'oil',amt:1,inter:true},{ing:'table salt',amt:1,inter:true},{ing:'carbon',amt:1},{ing:'ethanol',amt:1}],
+   effects:[{t:'heal',s:'3 Poison per unit; removes histamine; reduces jitter/shaking'}]},
+  {id:'hercuri',name:'Hercuri',cat:'med',od:'none',abs:'0.5u/s',heat:'cool <100K',
+   recipe:[{ing:'cryostylane',amt:3,inter:true},{ing:'sodium hydroxide',amt:1,inter:true},{ing:'potassium iodide',amt:1,inter:true}],
+   effects:[{t:'heal',s:'3 Heat/unit; ×2 if body has 40+ Heat damage'},{t:'misc',s:'Cools body to min 160.15K'}]},
+  {id:'herignis',name:'Herignis',cat:'med',od:'none',abs:'0.5u/s',heat:'>600K',
+   recipe:[{ing:'hercuri',amt:3,inter:true},{ing:'phlogiston',amt:2,inter:true}],
+   effects:[{t:'heal',s:'3 Cold/unit; ×2 if body has 40+ Cold damage'},{t:'misc',s:'Heats body to max 420K'}]},
+  {id:'morphine',name:'Morphine',cat:'med',od:'16u',abs:'0.1u/s',heat:null,
+   recipe:[{ing:'phenol',amt:2,inter:true},{ing:'nitrogen',amt:1},{ing:'oxygen',amt:1}],
+   effects:[{t:'heal',s:'−50 pain for 30s'},{t:'misc',s:'+2.5 drowsiness'}]},
+  {id:'oculine',name:'Oculine',cat:'med',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'hydroxide',amt:2,inter:true},{ing:'table salt',amt:1,inter:true},{ing:'blood',amt:1}],
+   effects:[{t:'heal',s:'Heals eye damage / blindness'}]},
+  {id:'ibuprofen',name:'Ibuprofen',cat:'med',od:'20u',abs:'0.15u/s',heat:null,
+   recipe:[{ing:'charcoal',amt:1,inter:true},{ing:'benzene',amt:1,inter:true},{ing:'fluorine',amt:1}],
+   effects:[{t:'heal',s:'1 Brute + −10 pain per 30s'},{t:'misc',s:'Thermal stability effect'}]},
+
+  // ── TOXINS ──
+  {id:'chloral hydrate',name:'Chloral Hydrate',cat:'tox',od:'20u (unconscious)',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'chlorine',amt:3},{ing:'ethanol',amt:1},{ing:'water',amt:1}],
+   effects:[{t:'misc',s:'65% speed; +4s drowsiness — knocks out rapidly'}]},
+  {id:'lexorin',name:'Lexorin',cat:'tox',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'heartbreaker toxin',amt:1,inter:true},{ing:'plasma',amt:1},{ing:'vestine',amt:1,inter:true}],
+   effects:[{t:'dmg',s:'5 Asphyx + 5 Bloodloss per unit — stops breathing'}]},
+  {id:'mindbreaker toxin',name:'Mindbreaker Toxin',cat:'tox',od:'none',abs:'0.5u/s',heat:'>370K',
+   recipe:[{ing:'silicon',amt:1},{ing:'hydrogen',amt:1},{ing:'dylovene',amt:1,inter:true}],
+   effects:[{t:'misc',s:'+10s hallucinations per unit'}]},
+  {id:'heartbreaker toxin',name:'Heartbreaker Toxin',cat:'tox',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'dexalin+',amt:1,inter:true},{ing:'mindbreaker toxin',amt:1,inter:true}],
+   effects:[{t:'dmg',s:'5 Asphyx per unit'}]},
+  {id:'calomel',name:'Calomel',cat:'tox',od:'15u',abs:'1u/s',heat:'>370K',
+   recipe:[{ing:'mercury',amt:1},{ing:'lithium',amt:1}],
+   effects:[{t:'misc',s:'Removes 4.5u from each substance in body per tick'},{t:'dmg',s:'3 Poison when alive, −3 Poison when in crit'}]},
+  {id:'ammoniated mercury',name:'Ammoniated Mercury',cat:'tox',od:'10u',abs:'0.15u/s',heat:null,
+   recipe:[{ing:'calomel',amt:1,inter:true},{ing:'ammonia',amt:1,inter:true}],
+   effects:[{t:'misc',s:'Removes 6u of poison-group reagents from body'},{t:'heal',s:'−3 Poison per tick (<10u, no Brute/Burn)'}]},
+  {id:'cyanide',name:'Cyanide',cat:'tox',od:'none',abs:'0.1u/s',heat:null,
+   recipe:[{ing:'ammonia',amt:1,inter:true},{ing:'oil',amt:1,inter:true},{ing:'oxygen',amt:1}],
+   effects:[{t:'dmg',s:'0.75 Poison + 0.25 Asphyx per unit; 5% paralysis for 2s'}]},
+  {id:'polytrinic acid',name:'Polytrinic Acid',cat:'tox',od:'none',abs:'3u/s',heat:null,
+   recipe:[{ing:'sulfuric acid',amt:1,inter:true},{ing:'plasma',amt:1},{ing:'potassium',amt:1}],
+   effects:[{t:'dmg',s:'11 Caustic per unit'}]},
+  {id:'triclor',name:'Triclor',cat:'tox',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'chlorine',amt:3},{ing:'ammonia',amt:1,inter:true},{ing:'sodium hydroxide',amt:1,inter:true},{ing:'ipecac',amt:1,inter:true}],
+   effects:[{t:'dmg',s:'4 Blunt + 4 Poison + bleeding + blood loss; vomiting; 80% speed; stuttering; jitter'}]},
+  {id:'impedrezene',name:'Impedrezene',cat:'tox',od:'none',abs:'0.5u/s',heat:'>370K',
+   recipe:[{ing:'mercury',amt:1},{ing:'oxygen',amt:1},{ing:'water',amt:1}],
+   effects:[{t:'dmg',s:'−1 Brute + −0.5 Heat/Shock/Cold/Rad + 2 Poison; 65% speed; hallucinations; drunk; 5% vomit'}]},
+  {id:'pax',name:'Pax',cat:'tox',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'mindbreaker toxin',amt:1,inter:true},{ing:'synaptizine',amt:1,inter:true},{ing:'water',amt:1}],
+   effects:[{t:'misc',s:'Causes pacification — prevents violence'}]},
+  {id:'mute toxin',name:'Mute Toxin',cat:'tox',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'vestine',amt:2,inter:true},{ing:'space glue',amt:2,inter:true},{ing:'uranium',amt:1}],
+   effects:[{t:'misc',s:'Target cannot speak'}]},
+  {id:'nocturine',name:'Nocturine',cat:'tox',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'impedrezene',amt:2,inter:true},{ing:'vestine',amt:1,inter:true}],
+   effects:[{t:'misc',s:'>8u forces sleep'}]},
+
+  // ── NARCOTICS ──
+  {id:'ephedrine',name:'Ephedrine',cat:'narc',od:'20u',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'oil',amt:1,inter:true},{ing:'hydrogen',amt:1},{ing:'sugar',amt:1},{ing:'diethylamine',amt:1,inter:true}],
+   effects:[{t:'misc',s:'125% speed; adrenaline; jittering; −1 Brute/Heat/Shock/Cold/Rad'}]},
+  {id:'desoxyephedrine',name:'Desoxyephedrine',cat:'narc',od:'30u',abs:'0.5u/s',heat:'370K–420K',
+   recipe:[{ing:'ephedrine',amt:1,inter:true},{ing:'carbon',amt:1},{ing:'iodine',amt:1},{ing:'phosphorus',amt:1}],
+   effects:[{t:'misc',s:'135% speed; adrenaline; −3s stun/knockdown; cures narcolepsy'},{t:'dmg',s:'0.75 Poison per unit'}]},
+  {id:'space drugs',name:'Space Drugs',cat:'narc',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'mercury',amt:1},{ing:'sugar',amt:1},{ing:'lithium',amt:1}],
+   effects:[{t:'misc',s:'+5s hallucinations per unit'}]},
+  {id:'chloral hydrate',name:'Chloral Hydrate',cat:'narc',od:'20u',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'chlorine',amt:3},{ing:'ethanol',amt:1},{ing:'water',amt:1}],
+   effects:[{t:'misc',s:'65% speed; +4s drowsiness — used as sedative'}]},
+  {id:'cryptobiolin',name:'Cryptobiolin',cat:'narc',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'potassium',amt:1},{ing:'oxygen',amt:1},{ing:'sugar',amt:1}],
+   effects:[{t:'misc',s:'Stuttering; drunk; causes psionic isolation'}]},
+  {id:'synaptizine',name:'Synaptizine',cat:'narc',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'lithium',amt:1},{ing:'sugar',amt:1},{ing:'water',amt:1}],
+   effects:[{t:'misc',s:'Removes stun/knockdown/hallucinations'},{t:'dmg',s:'2 Poison per unit'}]},
+  {id:'fentanyl',name:'Fentanyl',cat:'narc',od:'5u',abs:'0.05u/s',heat:'410K–420K',
+   recipe:[{ing:'impedrezene',amt:3,inter:true},{ing:'desoxyephedrine',amt:2,inter:true},{ing:'bleach',amt:1,inter:true}],
+   effects:[{t:'heal',s:'−400 pain for 30s'},{t:'dmg',s:'0.25 Poison; 80% speed; 5% paralysis; stuttering; jitter; drunk; hallucinations'}]},
+  {id:'aranesp',name:'Aranesp',cat:'narc',od:'50u',abs:'1u/s',heat:null,
+   recipe:[{ing:'epinephrine',amt:1,inter:true},{ing:'atropine',amt:1,inter:true},{ing:'desoxyephedrine',amt:1,inter:true}],
+   effects:[{t:'misc',s:'130% speed; +5 stamina; adrenaline; −3s stun; removes drowsiness/narcolepsy'},{t:'dmg',s:'0.5 Asphyx per unit'}]},
+
+  // ── PYROTECHNICS ──
+  {id:'phlogiston',name:'Phlogiston',cat:'pyro',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'phosphorus',amt:1},{ing:'sulfuric acid',amt:1,inter:true},{ing:'plasma',amt:1}],
+   effects:[{t:'dmg',s:'3 Heat + 1 Poison per unit; increases flammability; ignites; +6kJ'}]},
+  {id:'napalm',name:'Napalm',cat:'pyro',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'oil',amt:1,inter:true},{ing:'welding fuel',amt:1},{ing:'ethanol',amt:1}],
+   effects:[{t:'dmg',s:'2 Heat + 1 Poison + 0.5 Caustic per unit; increases flammability'}]},
+  {id:'thermite',name:'Thermite',cat:'pyro',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'iron',amt:1},{ing:'aluminum',amt:1},{ing:'oxygen',amt:1}],
+   effects:[{t:'misc',s:'Burns through walls when ignited — 2 Heat + 1 Poison per unit'}]},
+  {id:'chlorine trifluoride',name:'Chlorine Trifluoride (CLF3)',cat:'pyro',od:'none',abs:'0.5u/s',heat:'>370K (unbreakable container!)',
+   recipe:[{ing:'fluorine',amt:3},{ing:'chlorine',amt:1}],
+   effects:[{t:'dmg',s:'2 Heat + 1 Poison + 0.5 Caustic; increases flammability; +6kJ'},{t:'misc',s:'⚠ Stand diagonally — explosion is a cross shape'}]},
+  {id:'fluorosurfactant',name:'Fluorosurfactant',cat:'pyro',od:'none',abs:null,heat:null,
+   recipe:[{ing:'carbon',amt:2},{ing:'fluorine',amt:2},{ing:'sulfuric acid',amt:1,inter:true}],
+   effects:[{t:'misc',s:'Add water to create foam — spreads substances over large tile area'}]},
+  {id:'gunpowder',name:'Gunpowder',cat:'pyro',od:'none',abs:null,heat:null,
+   recipe:[{ing:'carbon',amt:2},{ing:'sulfur',amt:3},{ing:'potassium',amt:5}],
+   effects:[{t:'misc',s:'Explosive when ignited — used in grenades and bombs'}]},
+
+  // ── MISC ──
+  {id:'sodium polyacrylate',name:'Sodium Polyacrylate',cat:'misc',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'oxygen',amt:2},{ing:'sodium',amt:1},{ing:'nitrogen',amt:1}],
+   effects:[{t:'misc',s:'Causes desiccation'}]},
+  {id:'charcoal',name:'Charcoal',cat:'misc',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'carbon',amt:1},{ing:'ash',amt:1}],
+   effects:[{t:'heal',s:'1 Poison per unit'}]},
+  {id:'space lube',name:'Space Lube',cat:'misc',od:'none',abs:null,heat:null,
+   recipe:[{ing:'water',amt:1},{ing:'fersilicite',amt:1,inter:true},{ing:'oxygen',amt:1}],
+   effects:[{t:'misc',s:'Creates slippery floor tiles'}]},
+  {id:'cognizine',name:'Cognizine',cat:'misc',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'carpotoxin',amt:1},{ing:'siderlac',amt:1,inter:true},{ing:'acetone',amt:1,inter:true}],
+   effects:[{t:'misc',s:'5u grants sentience to animals'}]},
+  {id:'aloxadone',name:'Aloxadone',cat:'med',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'cryoxadone',amt:2,inter:true},{ing:'leporazine',amt:2,inter:true},{ing:'aloe',amt:1}],
+   effects:[{t:'heal',s:'<213K: 10 Heat + 10 Shock + 10 Caustic per unit; works on dead'}]},
+  {id:'necrosol',name:'Necrosol',cat:'med',od:'none',abs:'0.5u/s',heat:'>370K',
+   recipe:[{ing:'blood',amt:3},{ing:'cryoxadone',amt:2,inter:true},{ing:'omnizine',amt:1,inter:true}],
+   effects:[{t:'heal',s:'<213K: 5 Brute + 7.5 Burn + 10 Asphyx + 5 Poison; works on dead'}]},
+  {id:'ambuzol',name:'Ambuzol',cat:'med',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'zombie blood',amt:2,inter:true},{ing:'dylovene',amt:1,inter:true},{ing:'ammonia',amt:1,inter:true}],
+   effects:[{t:'heal',s:'Cures zombie virus (10u threshold)'}]},
+  {id:'ambuzol+',name:'Ambuzol Plus',cat:'med',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[{ing:'ambuzol',amt:5,inter:true},{ing:'omnizine',amt:5,inter:true}],
+   effects:[{t:'heal',s:'Cures AND grants immunity to zombie virus'}]},
+  {id:'vestine',name:'Vestine',cat:'tox',od:'none',abs:'0.5u/s',heat:null,
+   recipe:[],
+   effects:[{t:'dmg',s:'1 Asphyx + 1 Bloodloss + 80% speed + 5s jittering'},{t:'misc',s:'Syndicate contraband — no synthesis recipe'}]},
+];
+
+// ══════════════════════════════════════════
+//  CHEMISTRY UI
+// ══════════════════════════════════════════
+let chemFilter = 'all';
+let selectedChem = null;
+
+const CAT_LABELS = {med:'MED',tox:'TOXIN',narc:'NARC',pyro:'PYRO',misc:'MISC'};
+const CAT_CLS    = {med:'cat-med',tox:'cat-tox',narc:'cat-narc',pyro:'cat-pyro',misc:'cat-misc'};
+
+function setChemFilter(f, btn) {
+  chemFilter = f;
+  document.querySelectorAll('.cf-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderChemList();
+}
+
+function renderChemList() {
+  const q = document.getElementById('chem-search').value.toLowerCase().trim();
+  // Deduplicate by id
+  const seen = new Set();
+  const items = CHEMS.filter(c => {
+    if (seen.has(c.id)) return false;
+    seen.add(c.id);
+    const catMatch = chemFilter === 'all' || c.cat === chemFilter;
+    const qMatch = !q || c.name.toLowerCase().includes(q) ||
+      c.recipe.some(r => r.ing.toLowerCase().includes(q));
+    return catMatch && qMatch;
+  });
+
+  const list = document.getElementById('chem-list');
+  if (!items.length) { list.innerHTML = '<div class="ci-empty">// no results</div>'; return; }
+  list.innerHTML = items.map(c => `
+    <div class="chem-item${selectedChem===c.id?' selected':''}" onclick="selectChem('${c.id}')">
+      <span class="ci-name">${c.name}</span>
+      <span class="ci-cat ${CAT_CLS[c.cat]||'cat-misc'}">${CAT_LABELS[c.cat]||'MISC'}</span>
+    </div>`).join('');
+}
+
+function selectChem(id) {
+  selectedChem = id;
+  renderChemList();
+  const c = CHEMS.find(x => x.id === id);
+  if (!c) return;
+  renderChemDetail(c);
+}
+
+// Recursively flatten recipe to base elements
+function flattenRecipe(chem, multiplier, visited) {
+  if (!visited) visited = new Set();
+  if (visited.has(chem.id)) return {};
+  visited.add(chem.id);
+
+  const result = {};
+  for (const ing of chem.recipe) {
+    if (ing.catalyst) continue; // catalysts not consumed
+    const amt = ing.amt * multiplier;
+    const sub = CHEMS.find(c => c.id === ing.ing || c.name.toLowerCase() === ing.ing.toLowerCase());
+    if (sub && ing.inter && sub.recipe.length > 0) {
+      const sub_result = flattenRecipe(sub, amt, new Set(visited));
+      for (const [k, v] of Object.entries(sub_result)) {
+        result[k] = (result[k] || 0) + v;
+      }
+    } else {
+      const key = ing.ing;
+      result[key] = (result[key] || 0) + amt;
+    }
+  }
+  return result;
+}
+
+function renderChemDetail(c) {
+  const det = document.getElementById('chem-detail');
+
+  // Build intermediate steps
+  const steps = [];
+  function buildSteps(chem, depth) {
+    if (depth > 5) return;
+    for (const ing of chem.recipe) {
+      if (ing.catalyst) continue;
+      const sub = CHEMS.find(s => s.id === ing.ing || s.name.toLowerCase() === ing.ing.toLowerCase());
+      if (sub && ing.inter && sub.recipe.length > 0) {
+        buildSteps(sub, depth + 1);
+        steps.push({ name: sub.name, heat: sub.heat, id: sub.id });
+      }
+    }
+  }
+  buildSteps(c, 0);
+  const uniqueSteps = [...new Map(steps.map(s => [s.id, s])).values()];
+
+  // Flatten to base elements
+  const bases = flattenRecipe(c, 1, new Set());
+
+  // Base elements HTML
+  const baseHTML = Object.entries(bases).map(([ing, amt]) => {
+    const inDisp = DISPENSER.has(ing.toLowerCase());
+    const src = SOURCES[ing.toLowerCase()] || (inDisp ? 'dispenser' : 'other source');
+    const rounded = Math.round(amt * 100) / 100;
+    return `<div class="base-item ${inDisp ? 'dispenser' : 'not-dispenser'}">
+      <div class="bi-name">${ing}</div>
+      <div class="bi-amt">${rounded}u</div>
+      <div class="bi-src">${inDisp ? '✓ dispenser' : '⚠ ' + src}</div>
+    </div>`;
+  }).join('');
+
+  // Recipe steps HTML
+  const stepsHTML = c.recipe.map(ing => {
+    const sub = CHEMS.find(s => s.id === ing.ing || s.name.toLowerCase() === ing.ing.toLowerCase());
+    const isInter = ing.inter && sub && sub.recipe.length > 0;
+    return `<div class="rt-row${isInter ? ' intermediate' : ''}">
+      <span class="rt-amt">${ing.amt}u</span>
+      <span class="rt-arrow">→</span>
+      <span class="rt-name">${ing.ing}${ing.catalyst ? ' <em style="color:var(--amber-l)">(catalyst)</em>' : ''}</span>
+      ${isInter ? `<span class="rt-note">intermediate</span>` : ''}
+    </div>`;
+  }).join('');
+
+  // Intermediate steps
+  const interStepsHTML = uniqueSteps.length ? uniqueSteps.map(s => {
+    const sub = CHEMS.find(x => x.id === s.id);
+    if (!sub) return '';
+    return `<div style="margin-bottom:8px">
+      <div style="font-size:12px;font-weight:600;color:var(--amber-l);margin-bottom:4px;font-family:var(--mono)">${s.name}${s.heat ? ` — heat ${s.heat}` : ''}</div>
+      ${sub.recipe.map(r => `<div class="rt-row" style="margin-bottom:3px"><span class="rt-amt">${r.amt}u</span><span class="rt-arrow">→</span><span class="rt-name">${r.ing}${r.catalyst?' <em style="color:var(--amber-l)">(catalyst)</em>':''}</span></div>`).join('')}
+    </div>`;
+  }).join('') : '';
+
+  // Effects HTML
+  const effHTML = c.effects.map(e => {
+    const cls = e.t === 'heal' ? 'eff-heal' : e.t === 'dmg' ? 'eff-dmg' : 'eff-misc';
+    const icon = e.t === 'heal' ? '+ ' : e.t === 'dmg' ? '✕ ' : '• ';
+    return `<div class="eff-row ${cls}">${icon}${e.s}</div>`;
+  }).join('');
+
+  const odHTML = c.od && c.od !== 'none' ? `<div class="od-box">⚠ Overdose: ${c.od}</div>` : '';
+  const heatHTML = c.heat ? `<div class="heat-box">🌡 Heat required: ${c.heat}</div>` : '';
+
+  det.innerHTML = `
+    <div class="cd-name">${c.name}</div>
+    <div class="cd-meta">
+      <span><span class="ci-cat ${CAT_CLS[c.cat]||'cat-misc'}">${CAT_LABELS[c.cat]||'MISC'}</span></span>
+      ${c.abs ? `<span>⏱ ${c.abs} absorption</span>` : ''}
+      ${c.od && c.od !== 'none' ? `<span style="color:var(--red-l)">⚠ OD: ${c.od}</span>` : '<span style="color:var(--green-l)">✓ No OD</span>'}
+    </div>
+
+    <div class="cd-section">
+      <div class="cd-section-title">Effects</div>
+      <div class="effects-list">${effHTML || '<div class="eff-misc">• No direct effects (intermediate substance)</div>'}</div>
+      ${odHTML}${heatHTML}
+    </div>
+
+    <div class="cd-section">
+      <div class="cd-section-title">Direct Recipe</div>
+      <div class="recipe-tree">${stepsHTML || '<div style="color:var(--text3);font-size:13px">No synthesis recipe — obtained through other means</div>'}</div>
+    </div>
+
+    ${uniqueSteps.length ? `<div class="cd-section">
+      <div class="cd-section-title">Intermediate Recipes (expand these first)</div>
+      ${interStepsHTML}
+    </div>` : ''}
+
+    ${Object.keys(bases).length ? `<div class="cd-section">
+      <div class="cd-section-title">Base Elements Needed (total, from dispenser)</div>
+      <div class="base-grid">${baseHTML}</div>
+    </div>` : ''}
+  `;
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+buildSrvTabs();
+buildScPanels();
+scRender();
+renderChemList();
+showPage('sc');
+</script>
+</body>
+</html>
